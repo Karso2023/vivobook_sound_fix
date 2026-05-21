@@ -18,4 +18,5 @@ It works but the sound is really low + it might fail again after package update.
 - [Linux Mint Forums discussion](https://forums.linuxmint.com/viewtopic.php?t=445025&sid=d2698ea759a6284263a1a88a4aad0ca8)
 - [Pretty useful temporary fix from other people](https://gist.github.com/rraks/4edddb99b50b94fe6298adbf3c9f43eb)
 - [TAS2781 product details](https://www.ti.com/product/TAS2781)
+- [TAS2781 documentation](https://www.ti.com/lit/ds/symlink/tas2781.pdf?ts=1779388356245&ref_url=https%253A%252F%252Fwww.ti.com%252Fproduct%252FTAS2781)
 - [SmartPA speaker protection algorithm](https://www.ti.com/lit/an/slaa857/slaa857.pdf)
