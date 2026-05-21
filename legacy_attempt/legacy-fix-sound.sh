@@ -7,7 +7,7 @@ export TERM=linux
 # Some distros don't have i2c-dev module loaded by default, so we load it manually
 
 modprobe i2c-dev
-i2c_bus=12
+i2c_bus=0 #mine is 0, remember to change it the the correct one
 echo "Using I2C bus: $i2c_bus"
 i2c_addr=(0x38 0x3d) # Slight changes here cuz left and right channels were flipped
 
