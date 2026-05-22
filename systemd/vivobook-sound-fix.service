@@ -1,0 +1,11 @@
+[Unit]
+Description=ASUS Vivobook S14 Flip TP3407SA speaker fix
+After=sound.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/asus-sound-fix
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

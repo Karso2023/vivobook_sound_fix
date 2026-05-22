@@ -1,35 +1,34 @@
 # Maintainer: Karso Cheung <karsoo2023@gmail.com>
-
 pkgname=asus-sound-fix
-pkgver=
+pkgver=0.1.0
 pkgrel=1
-pkgdesc='asus vivobook14 flip no sound issue fixed'
-url=''
-license=()
-makedepends=('cargo')
-depends=()
+pkgdesc="Fix no sound issue on ASUS Vivobook S14 Flip TP3407SA"
 arch=('x86_64')
-source=()
-b2sums=()
+url="https://github.com/Karso2023/vivobook_sound_fix"
+license=('GPL3')
+depends=()
+makedepends=('cargo' 'rust')
+install=asus-sound-fix.install
+source=("$pkgname-$pkgver.tar.gz::https://github.com/Karso2023/vivobook_sound_fix/archive/refs/tags/v$pkgver.tar.gz")
+sha256sums=('SKIP')
+
+_srcdir="vivobook_sound_fix-$pkgver"
 
 prepare() {
+    cd "$srcdir/$_srcdir/sound-fix"
     export RUSTUP_TOOLCHAIN=stable
-    cargo fetch --locked --target host-tuple
+    cargo fetch --locked --target "$(rustc -vV | sed -n 's/host: //p')"
 }
 
 build() {
+    cd "$srcdir/$_srcdir/sound-fix"
     export RUSTUP_TOOLCHAIN=stable
     export CARGO_TARGET_DIR=target
-    cargo build --frozen --release --all-features
-}
-
-check() {
-    export RUSTUP_TOOLCHAIN=stable
-    cargo test --frozen --all-features
+    cargo build --frozen --release
 }
 
 package() {
-    install -Dm0755 -t "$pkgdir/usr/bin/" "target/release/$pkgname"
-    # for custom license, e.g. MIT
-    # install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
+    cd "$srcdir/$_srcdir"
+    install -Dm755 "sound-fix/target/release/sound-fix" "$pkgdir/usr/bin/asus-sound-fix"
+    install -Dm644 "systemd/vivobook-sound-fix.service" "$pkgdir/usr/lib/systemd/system/asus-sound-fix.service"
 }
