@@ -9,7 +9,7 @@ It works but the sound is really low + it might fail again after package update.
 
 
 ### Solution 
-
+I am gonna publish it on Cachyos so affected user can just use paru to install the package and fix the issue
 
 
 ### Reference 
