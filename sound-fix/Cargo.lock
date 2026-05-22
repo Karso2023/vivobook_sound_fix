@@ -60,4 +60,5 @@ name = "sound-fix"
 version = "0.1.0"
 dependencies = [
  "i2cdev",
+ "libc",
 ]
