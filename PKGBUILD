@@ -1,31 +1,35 @@
 # Maintainer: Karso Cheung <karsoo2023@gmail.com>
-pkgname=sound-fix
-pkgver=VERSION
+
+pkgname=asus-sound-fix
+pkgver=
 pkgrel=1
-pkgdesc="package to fix ASUS Vivobook 14 Flip (TP3407SA) no sound issue"
-arch=('x86_64')
-url="https://github.com/Karso2023/vivobook_sound_fix"
-license=('GPL')
-groups=('')
-depends=('git')
+pkgdesc='asus vivobook14 flip no sound issue fixed'
+url=''
+license=()
 makedepends=('cargo')
-optdepends=('')
-source=(""{,.sig})
-sha256sums=('')
+depends=()
+arch=('x86_64')
+source=()
+b2sums=()
 
 prepare() {
-    cd "${pkgname}-${pkgver}"
-
-    cd sound-fix
-    # to do after i build the actual fix 
+    export RUSTUP_TOOLCHAIN=stable
+    cargo fetch --locked --target host-tuple
 }
 
 build() {
-    cd "${pkgname}-${pkgver}/sound-fix"
-    export CARGO_TARGET_DIR=target 
-    cargo build --frozen --release --features git
+    export RUSTUP_TOOLCHAIN=stable
+    export CARGO_TARGET_DIR=target
+    cargo build --frozen --release --all-features
+}
+
+check() {
+    export RUSTUP_TOOLCHAIN=stable
+    cargo test --frozen --all-features
 }
 
 package() {
-    
+    install -Dm0755 -t "$pkgdir/usr/bin/" "target/release/$pkgname"
+    # for custom license, e.g. MIT
+    # install -Dm644 LICENSE "${pkgdir}/usr/share/licenses/${pkgname}/LICENSE"
 }
