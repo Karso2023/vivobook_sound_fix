@@ -4,7 +4,7 @@ After=sound.target
 
 [Service]
 Type=oneshot
-ExecStartPre=/bin/sleep 3
+ExecStartPre=/bin/bash -c 'until [ -e /dev/snd/controlC0 ]; do sleep 0.5; done'
 ExecStart=/usr/bin/asus-sound-fix
 RemainAfterExit=yes
 
