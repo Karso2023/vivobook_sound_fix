@@ -14,7 +14,7 @@ const REGISTER_SEQUENCE: &[(u8, u8)] = &[
     (0x0f, 0x40),
     (0x5c, 0xd9),
     (0x60, 0x10),
-    (0x0a, 0x00), 
+    (0x0a, 0x00),
     (0x0d, 0x01),
     (0x16, 0x40), 
     (0x00, 0x01), 
@@ -75,7 +75,14 @@ pub fn configure(bus: u8) {
         // Sending [register, value] over the raw file is identical to what
         // i2cset and smbus_write_byte_data do, the kernel I2C layer handles framing.
         for &(register, value) in REGISTER_SEQUENCE {
-            if let Err(e) = file.write_all(&[register, value]) {
+            // 0x0a selects the TDM audio channel (left vs right input slot).
+            // 0x38 uses 0x1e (left), 0x3d uses 0x2e (right)
+            let actual_value = if register == 0x0a {
+                if addr == 0x38 { 0x1e } else { 0x2e }
+            } else {
+                value
+            };
+            if let Err(e) = file.write_all(&[register, actual_value]) {
                 println!("Write failed reg 0x{:02x} on chip 0x{:02x}: {}", register, addr, e);
             }
         }
