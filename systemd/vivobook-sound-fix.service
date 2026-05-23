@@ -4,6 +4,7 @@ After=sound.target
 
 [Service]
 Type=oneshot
+ExecStartPre=/bin/sleep 3
 ExecStart=/usr/bin/asus-sound-fix
 RemainAfterExit=yes
 
