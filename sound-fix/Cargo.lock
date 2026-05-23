@@ -57,7 +57,7 @@ dependencies = [
 
 [[package]]
 name = "sound-fix"
-version = "0.1.1"
+version = "0.1.2"
 dependencies = [
  "i2cdev",
  "libc",

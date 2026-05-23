@@ -2,8 +2,7 @@ use std::fs::OpenOptions;
 use std::io::Write;
 use std::os::unix::io::AsRawFd;
 
-
-// the previous version kept failing with EBUSY if kernel claimed it 
+// I2C_SLAVE_FORCE bypasses the kernel driver lock (same as i2cset -f)
 const I2C_SLAVE_FORCE: libc::c_ulong = 0x0706;
 
 const REGISTER_SEQUENCE: &[(u8, u8)] = &[
@@ -14,9 +13,9 @@ const REGISTER_SEQUENCE: &[(u8, u8)] = &[
     (0x0f, 0x40),
     (0x5c, 0xd9),
     (0x60, 0x10),
-    (0x0a, 0x00),
+    (0x0a, 0x00), 
     (0x0d, 0x01),
-    (0x16, 0x40), 
+    (0x16, 0x40), // speaker protection configuration
     (0x00, 0x01), 
     (0x17, 0xc8),
     (0x00, 0x04), 
@@ -43,50 +42,75 @@ const REGISTER_SEQUENCE: &[(u8, u8)] = &[
     (0x5a, 0x00),
     (0x5b, 0x00),
     (0x00, 0x00), 
-    (0x02, 0x00), // power up starts the amplifier running
+    (0x02, 0x00), 
 ];
 
-// 0x38 = left channel, 0x3d = right channel (specific to TP3407SA board wiring)
+// 0x38 = left channel, 0x3d = right channel (TP3407SA board wiring)
 const CHIP_ADDRESSES: &[u16] = &[0x38, 0x3d];
+
+const MAX_RETRIES: u32 = 5;
+const RETRY_DELAY: std::time::Duration = std::time::Duration::from_secs(1);
 
 pub fn configure(bus: u8) {
     let dev_path = format!("/dev/i2c-{}", bus);
 
     for &addr in CHIP_ADDRESSES {
-        // Open the raw I2C bus file. We need read+write access.
-        let mut file = match OpenOptions::new().read(true).write(true).open(&dev_path) {
-            Ok(f) => f,
-            Err(e) => {
-                println!("Cannot open {}: {}", dev_path, e);
-                continue;
+        let mut configured = false;
+
+        for attempt in 1..=MAX_RETRIES {
+            if attempt > 1 {
+                // wait before retrying 
+                std::thread::sleep(RETRY_DELAY);
             }
-        };
 
+            if try_configure_chip(&dev_path, addr) {
+                configured = true;
+                break;
+            }
 
-        let ret = unsafe {
-            libc::ioctl(file.as_raw_fd(), I2C_SLAVE_FORCE, addr as libc::c_ulong)
-        };
-        if ret < 0 {
-            println!("Failed to force-set address 0x{:02x} on {}", addr, dev_path);
-            continue;
+            println!(
+                "Attempt {}/{} failed for chip 0x{:02x}, retrying...",
+                attempt, MAX_RETRIES, addr
+            );
         }
 
-        // Write each (register, value) pair as a 2-byte I2C write transaction.
-        // Sending [register, value] over the raw file is identical to what
-        // i2cset and smbus_write_byte_data do, the kernel I2C layer handles framing.
-        for &(register, value) in REGISTER_SEQUENCE {
-            // 0x0a selects the TDM audio channel (left vs right input slot).
-            // 0x38 uses 0x1e (left), 0x3d uses 0x2e (right)
-            let actual_value = if register == 0x0a {
-                if addr == 0x38 { 0x1e } else { 0x2e }
-            } else {
-                value
-            };
-            if let Err(e) = file.write_all(&[register, actual_value]) {
-                println!("Write failed reg 0x{:02x} on chip 0x{:02x}: {}", register, addr, e);
-            }
+        if configured {
+            println!("Configured chip 0x{:02x}", addr);
+        } else {
+            println!(
+                "Failed to configure chip 0x{:02x} after {} attempts",
+                addr, MAX_RETRIES
+            );
         }
-
-        println!("Configured chip 0x{:02x}", addr);
     }
+}
+
+// Returns true if the chip was opened, addressed, and all registers written successfully.
+fn try_configure_chip(dev_path: &str, addr: u16) -> bool {
+    let mut file = match OpenOptions::new().read(true).write(true).open(dev_path) {
+        Ok(f) => f,
+        Err(_) => return false,
+    };
+
+    let ret = unsafe {
+        libc::ioctl(file.as_raw_fd(), I2C_SLAVE_FORCE, addr as libc::c_ulong)
+    };
+    if ret < 0 {
+        return false;
+    }
+
+    for &(register, value) in REGISTER_SEQUENCE {
+        // 0x0a selects the TDM audio channel, left chip uses 0x1e, right chip uses 0x2e
+        let actual_value = if register == 0x0a {
+            if addr == 0x38 { 0x1e } else { 0x2e }
+        } else {
+            value
+        };
+
+        if file.write_all(&[register, actual_value]).is_err() {
+            return false;
+        }
+    }
+
+    true
 }
