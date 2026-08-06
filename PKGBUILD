@@ -1,7 +1,7 @@
 # Maintainer: Karso Cheung <karsoo2023@gmail.com>
 pkgname=asus-sound-fix
-pkgver=0.1.3
-pkgrel=2
+pkgver=0.1.4
+pkgrel=1
 pkgdesc="Fix no sound issue on ASUS Vivobook S14 Flip TP3407SA"
 arch=('x86_64')
 url="https://github.com/Karso2023/vivobook_sound_fix"
@@ -30,5 +30,5 @@ build() {
 package() {
     cd "$srcdir/$_srcdir"
     install -Dm755 "sound-fix/target/release/sound-fix" "$pkgdir/usr/bin/asus-sound-fix"
-    install -Dm644 "systemd/vivobook-sound-fix.service" "$pkgdir/usr/lib/systemd/system/asus-sound-fix.service"
+    install -Dm644 "systemd/asus-sound-fix.service" "$pkgdir/usr/lib/systemd/system/asus-sound-fix.service"
 }

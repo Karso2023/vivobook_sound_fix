@@ -37,7 +37,7 @@ cargo build --release
 
 sudo cp target/release/sound-fix /usr/bin/asus-sound-fix
 
-sudo cp ../systemd/vivobook-sound-fix.service /usr/lib/systemd/system/
+sudo cp ../systemd/asus-sound-fix.service /usr/lib/systemd/system/
 
 sudo systemctl enable --now asus-sound-fix.service
 ```
